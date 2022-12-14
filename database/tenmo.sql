@@ -1,8 +1,8 @@
 BEGIN TRANSACTION;
 
-DROP TABLE IF EXISTS tenmo_user, account;
+DROP TABLE IF EXISTS transaction, tenmo_user, account;
 
-DROP SEQUENCE IF EXISTS seq_user_id, seq_account_id;
+DROP SEQUENCE IF EXISTS seq_transaction_id, seq_user_id, seq_account_id;
 
 -- Sequence to start user_id values at 1001 instead of 1
 CREATE SEQUENCE seq_user_id
@@ -49,10 +49,13 @@ CREATE TABLE transaction(
 	CONSTRAINT CHK_amount CHECK (amount > 0),
 	CONSTRAINT CHK_users CHECK (from_user_id != to_user_id)
 	
-);
+); 
 
 
 COMMIT;
+
+
+
 
 
 

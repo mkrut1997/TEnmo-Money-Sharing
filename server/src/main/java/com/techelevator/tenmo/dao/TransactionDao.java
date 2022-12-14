@@ -4,6 +4,6 @@ import com.techelevator.tenmo.model.Transaction;
 
 public interface TransactionDao {
 
-    void createNewTransaction (Transaction transaction);
+    Transaction createNewTransaction (Transaction transaction);
 
 }

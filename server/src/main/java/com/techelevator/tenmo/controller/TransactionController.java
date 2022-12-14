@@ -1,12 +1,17 @@
 package com.techelevator.tenmo.controller;
 
+import com.techelevator.tenmo.dao.AccountDao;
+import com.techelevator.tenmo.dao.TransactionDao;
 import com.techelevator.tenmo.dao.UserDao;
+import com.techelevator.tenmo.model.Account;
+import com.techelevator.tenmo.model.Transaction;
 import com.techelevator.tenmo.model.User;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
 import java.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,9 +22,13 @@ import java.util.List;
 public class TransactionController {
 
     private UserDao userDao;
+    private AccountDao accountDao;
+    private TransactionDao transactionDao;
 
-    public TransactionController(UserDao userDao) {
+    public TransactionController(UserDao userDao, AccountDao accountDao, TransactionDao transactionDao) {
         this.userDao = userDao;
+        this.accountDao = accountDao;
+        this.transactionDao = transactionDao;
     }
 
     @RequestMapping(method = RequestMethod.GET)
@@ -33,6 +42,26 @@ public class TransactionController {
             }
         }
         return userNames;
+    }
+
+    @ResponseStatus(HttpStatus.CREATED)
+    @RequestMapping( path = "/to_{toUserName}/{amount}" ,method = RequestMethod.POST)
+    public Transaction transact(@PathVariable String toUserName,
+                                @PathVariable BigDecimal amount,
+                                Principal principal){
+        Account fromAccount = accountDao.getAccountByUsername(principal.getName());
+        if(fromAccount.getBalance().compareTo(amount) < 0 || amount.compareTo(new BigDecimal("0.01")) < 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a valid amount OR not enough money in account");
+        }
+        Account toAccount = accountDao.getAccountByUsername(toUserName);
+        Transaction transaction = new Transaction();
+        transaction.setToUser(toAccount.getUserId());
+        transaction.setFromUser(fromAccount.getUserId());
+        transaction.setAmount(amount);
+        Transaction newTransaction = transactionDao.createNewTransaction(transaction);
+        accountDao.transaction(fromAccount, toAccount, amount);
+        return newTransaction;
+
     }
 }
 

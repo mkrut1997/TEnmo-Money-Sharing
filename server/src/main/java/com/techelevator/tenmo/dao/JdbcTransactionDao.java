@@ -14,10 +14,12 @@ public class JdbcTransactionDao implements TransactionDao {
     }
 
     @Override
-    public void createNewTransaction(Transaction transaction) {
-        String sql = "INSERT INTO transcation (from_user_id, to_user_id, amount) " +
-                "VALUES(?, ?, ?);";
-        jdbcTemplate.update(sql, transaction.getFromUser(), transaction.getToUser(), transaction.getAmount());
-
+    public Transaction createNewTransaction(Transaction transaction) {
+        Transaction newTransaction = transaction;
+        String sql = "INSERT INTO transaction (from_user_id, to_user_id, amount) " +
+                "VALUES(?, ?, ?) RETURNING transaction_id;";
+        int newId = jdbcTemplate.queryForObject(sql, int.class, transaction.getFromUser(), transaction.getToUser(), transaction.getAmount());
+        newTransaction.setTransactionId(newId);
+        return newTransaction;
     }
 }
