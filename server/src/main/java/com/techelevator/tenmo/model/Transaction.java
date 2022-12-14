@@ -8,6 +8,7 @@ public class Transaction {
     private  int fromUser;
     private int toUser;
     private BigDecimal amount;
+    private String status;
 
     public int getTransactionId() {
         return transactionId;
@@ -39,6 +40,14 @@ public class Transaction {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Transaction() {

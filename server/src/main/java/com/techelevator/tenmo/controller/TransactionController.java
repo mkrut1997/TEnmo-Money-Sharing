@@ -54,14 +54,30 @@ public class TransactionController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a valid amount OR not enough money in account");
         }
         Account toAccount = accountDao.getAccountByUsername(toUserName);
+        if(fromAccount.getUserId() == toAccount.getUserId()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can't send money to yourself");
+        }
         Transaction transaction = new Transaction();
         transaction.setToUser(toAccount.getUserId());
         transaction.setFromUser(fromAccount.getUserId());
         transaction.setAmount(amount);
+        transaction.setStatus("Approved");
         Transaction newTransaction = transactionDao.createNewTransaction(transaction);
         accountDao.transaction(fromAccount, toAccount, amount);
         return newTransaction;
+    }
 
+    @RequestMapping(path = "/mytransactions", method = RequestMethod.GET)
+    public List<Transaction> getAllTransactionsByUser (Principal principal) {
+        List<Transaction> transactions = new ArrayList<>();
+        transactions = transactionDao.getAllTransactionsByUser(accountDao.getAccountByUsername(principal.getName()).getUserId());
+        return transactions;
+    }
+
+    @RequestMapping(path = "/{id}", method = RequestMethod.GET)
+    public Transaction getTransactionById (@PathVariable int id) {
+        Transaction transaction = transactionDao.getTransactionById(id);
+        return transaction;
     }
 }
 

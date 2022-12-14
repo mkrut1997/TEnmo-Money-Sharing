@@ -43,6 +43,7 @@ CREATE TABLE transaction(
 	from_user_id int NOT NULL,
 	to_user_id int NOT NULL,
 	amount numeric(13,2) NOT NULL,
+	status varchar NOT NULL,
 	CONSTRAINT PK_transaction PRIMARY KEY (transaction_id),
 	CONSTRAINT FK_transaction_from_user FOREIGN KEY (from_user_id) REFERENCES tenmo_user (user_id),
 	CONSTRAINT FK_transaction_to_user FOREIGN KEY (to_user_id) REFERENCES tenmo_user (user_id),
