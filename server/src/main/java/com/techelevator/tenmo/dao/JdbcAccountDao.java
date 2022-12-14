@@ -5,6 +5,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+
 @Component
 public class JdbcAccountDao implements  AccountDao {
 
@@ -44,5 +46,16 @@ public class JdbcAccountDao implements  AccountDao {
         account.setUserId(rowSet.getInt("user_id"));
         account.setBalance(rowSet.getBigDecimal("balance"));
         return account;
+    }
+
+    @Override
+    public void transaction(Account fromAccount, Account toAccount, BigDecimal amount) {
+        String sql = "BEGIN TRANSACTION; " +
+                "UPDATE account SET balance = balance - ? " +
+                "WHERE user_id = ?; " +
+                "UPDATE account SET balance  = balance + ? " +
+                "WHERE user_id = ?; " +
+                "COMMIT;";
+        jdbcTemplate.update(sql, amount, fromAccount.getUserId() ,amount, toAccount.getUserId());
     }
 }
