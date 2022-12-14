@@ -2,6 +2,8 @@ package com.techelevator.tenmo.controller;
 
 import javax.validation.Valid;
 
+import com.techelevator.tenmo.dao.AccountDao;
+import com.techelevator.tenmo.model.Account;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -20,6 +22,8 @@ import com.techelevator.tenmo.model.User;
 import com.techelevator.tenmo.security.jwt.TokenProvider;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+
 /**
  * Controller to authenticate users.
  */
@@ -30,10 +34,13 @@ public class AuthenticationController {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private UserDao userDao;
 
-    public AuthenticationController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder, UserDao userDao) {
+    private AccountDao accountDao;
+
+    public AuthenticationController(TokenProvider tokenProvider, AuthenticationManagerBuilder authenticationManagerBuilder, UserDao userDao, AccountDao accountDao) {
         this.tokenProvider = tokenProvider;
         this.authenticationManagerBuilder = authenticationManagerBuilder;
         this.userDao = userDao;
+        this.accountDao = accountDao;
     }
 
     @RequestMapping(value = "/login", method = RequestMethod.POST)
@@ -56,7 +63,13 @@ public class AuthenticationController {
     public void register(@Valid @RequestBody RegisterUserDTO newUser) {
         if (!userDao.create(newUser.getUsername(), newUser.getPassword())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User registration failed.");
+        } else {
+            Account account = new Account();
+            account.setUserId(userDao.findIdByUsername(newUser.getUsername()));
+            account.setBalance(new BigDecimal("1000.00"));
+            accountDao.createNewAccount(account);
         }
+
     }
 
 
