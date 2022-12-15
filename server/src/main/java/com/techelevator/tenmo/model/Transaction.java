@@ -53,4 +53,11 @@ public class Transaction {
     public Transaction() {
     }
 
+    public Transaction(int transactionId, int fromUser, int toUser, BigDecimal amount, String status) {
+        this.transactionId = transactionId;
+        this.fromUser = fromUser;
+        this.toUser = toUser;
+        this.amount = amount;
+        this.status = status;
+    }
 }

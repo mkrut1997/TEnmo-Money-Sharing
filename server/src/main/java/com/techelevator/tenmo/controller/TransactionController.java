@@ -67,7 +67,7 @@ public class TransactionController {
         return newTransaction;
     }
 
-    @RequestMapping(path = "/mytransactions", method = RequestMethod.GET)
+    @RequestMapping(path = "/myTransactions", method = RequestMethod.GET)
     public List<Transaction> getAllTransactionsByUser (Principal principal) {
         List<Transaction> transactions = new ArrayList<>();
         transactions = transactionDao.getAllTransactionsByUser(accountDao.getAccountByUsername(principal.getName()).getUserId());
@@ -78,6 +78,22 @@ public class TransactionController {
     public Transaction getTransactionById (@PathVariable int id) {
         Transaction transaction = transactionDao.getTransactionById(id);
         return transaction;
+    }
+
+    @ResponseStatus(HttpStatus.CREATED)
+    @RequestMapping(path = "/from_{userName}/{amount}")
+    public Transaction requestTransaction(@PathVariable String userName,
+                                          @PathVariable BigDecimal amount,
+                                          Principal principal) {
+        Account fromAccount = accountDao.getAccountByUsername(userName);
+        Account toAccount = accountDao.getAccountByUsername(principal.getName());
+        Transaction transaction = new Transaction();
+        transaction.setToUser(toAccount.getUserId());
+        transaction.setFromUser(fromAccount.getUserId());
+        transaction.setAmount(amount);
+        transaction.setStatus("Pending");
+        Transaction newTransaction = transactionDao.createNewTransaction(transaction);
+        return newTransaction;
     }
 }
 
