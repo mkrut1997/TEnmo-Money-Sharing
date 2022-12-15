@@ -111,6 +111,30 @@ public class TransactionController {
 
     @RequestMapping(path = "/{id}/{action}", method = RequestMethod.PUT)
     public  void updateStatusOfTransaction (@PathVariable int id, @PathVariable String action, Principal principal) {
+        Transaction transaction = transactionDao.getTransactionById(id);
+        //Make sure the transaction's status is pending
+        if(!transaction.getStatus().equals("Pending")){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This transaction is not pending");
+        }
+        //Must make sure principal is the one being requested FROM
+        if(transaction.getFromUser() != accountDao.getAccountByUsername(principal.getName()).getUserId()){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This request is for a different user");
+        }
+        else {
+            if (action.equals("approve")) {
+                Account fromAccount = accountDao.getAccountByUserId(transaction.getFromUser());
+                if(fromAccount.getBalance().compareTo(transaction.getAmount()) < 0) {
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough money in account");
+                }
+                Account toAccount = accountDao.getAccountByUserId(transaction.getToUser());
+                accountDao.transaction(fromAccount, toAccount, transaction.getAmount());
+                transactionDao.updateStatusOfTransaction(id, "Approved");
+            } else if (action.equals("reject")){
+                transactionDao.updateStatusOfTransaction(id, "Rejected");
+            } else{
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Action is not recognized");
+            }
+        }
 
     }
 

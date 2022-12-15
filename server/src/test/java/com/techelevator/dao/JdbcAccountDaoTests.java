@@ -38,6 +38,11 @@ public class JdbcAccountDaoTests extends BaseDaoTests{
         assertAccountsMatch(ACCOUNT_2, accountDao.getAccountByUsername("bob"));
     }
 
+    @Test
+    public void assert_find_account_by_id_returns_correct_account(){
+        assertAccountsMatch(ACCOUNT_2, accountDao.getAccountByUserId(1001));
+    }
+
     //transaction method had to be tested manually in Postman and database
 
 

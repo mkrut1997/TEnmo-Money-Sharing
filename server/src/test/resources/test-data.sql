@@ -65,7 +65,7 @@ INSERT INTO account (user_id, balance) VALUES
 
 
 INSERT INTO transaction (from_user_id, to_user_id, amount, status) VALUES
-        (1001, 1002, 500.00, 'Approved'),
+        (1001, 1002, 500.00, 'Pending'),
         (1002, 1001, 500.00, 'Approved');
 
 

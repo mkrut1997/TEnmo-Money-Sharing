@@ -18,19 +18,15 @@ public class JdbcTransactionDaoTests extends BaseDaoTests{
 
     private JdbcTransactionDao transactionDao;
     private Transaction testTransaction;
-    private JdbcAccountDao accountDao;
 
     private static final Transaction TRANSACTION_1 = new Transaction(3003, 1001, 1002, new BigDecimal("300"), "Approved");
-    private static final Transaction TRANSACTION_2 = new Transaction(3001, 1001, 1002, new BigDecimal("500.00"), "Approved");
+    private static final Transaction TRANSACTION_2 = new Transaction(3001, 1001, 1002, new BigDecimal("500.00"), "Pending");
     private static final Transaction TRANSACTION_3 = new Transaction(3002, 1002, 1001, new BigDecimal("500.00"), "Approved");
 
     @Before
     public void setup(){
         JdbcTemplate template = new JdbcTemplate(dataSource);
         transactionDao = new JdbcTransactionDao(template);
-        accountDao = new JdbcAccountDao(template);
-        Account account = new Account(2002, 1002, new BigDecimal("500.00"));
-        accountDao.createNewAccount(account);
         testTransaction = new Transaction();
         testTransaction.setFromUser(1001);
         testTransaction.setToUser(1002);
@@ -63,6 +59,20 @@ public class JdbcTransactionDaoTests extends BaseDaoTests{
         assertTransactionsMatch(TRANSACTION_3, transactionDao.getTransactionById(3002));
     }
 
+    @Test
+    public void assert_correct_pending_list_returned(){
+        List<Transaction> expected = new ArrayList<>();
+        expected.add(TRANSACTION_2);
+
+        List<Transaction> actual = transactionDao.getAllPendingTransactions(1001, "Pending");
+        for (int i = 0; i < expected.size(); i++) {
+            assertTransactionsMatch(expected.get(i), actual.get(i));
+        }
+        Assert.assertEquals(expected.size(), actual.size());
+    }
+
+    //update status method had to be tested manually in postman and PostgreSQL
+
 
 
     private void assertTransactionsMatch(Transaction expected, Transaction actual){
@@ -72,6 +82,8 @@ public class JdbcTransactionDaoTests extends BaseDaoTests{
         Assert.assertEquals(expected.getAmount(), actual.getAmount());
         Assert.assertEquals(expected.getStatus(), actual.getStatus());
     }
+
+
 
 
 }
