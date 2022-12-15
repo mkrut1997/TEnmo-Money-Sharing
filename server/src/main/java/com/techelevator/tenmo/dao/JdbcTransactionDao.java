@@ -60,8 +60,8 @@ public class JdbcTransactionDao implements TransactionDao {
         List<Transaction> transactions = new ArrayList<>();
         String sql = "SELECT * " +
                 "FROM transaction " +
-                "WHERE (from_user_id = ? OR to_user_id = ?) AND status = ?";
-        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, userId, userId, status);
+                "WHERE from_user_id = ? AND status = ?";
+        SqlRowSet result = jdbcTemplate.queryForRowSet(sql, userId, status);
         while (result.next()) {
             transactions.add(mapToRowTransaction(result));
         }

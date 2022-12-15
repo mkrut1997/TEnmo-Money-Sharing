@@ -45,25 +45,20 @@ public class TransactionController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @RequestMapping( path = "/to_{toUserName}/{amount}" ,method = RequestMethod.POST)
-    public Transaction transact(@PathVariable String toUserName,
-                                @PathVariable BigDecimal amount,
+    @RequestMapping( path = "/sendBucks" ,method = RequestMethod.POST)
+    public Transaction transact(@RequestBody Transaction transaction,
                                 Principal principal){
         Account fromAccount = accountDao.getAccountByUsername(principal.getName());
-        if(fromAccount.getBalance().compareTo(amount) < 0 || amount.compareTo(new BigDecimal("0.01")) < 0){
+        if(fromAccount.getBalance().compareTo(transaction.getAmount()) < 0 || transaction.getAmount().compareTo(new BigDecimal("0.01")) < 0){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a valid amount OR not enough money in account");
         }
-        Account toAccount = accountDao.getAccountByUsername(toUserName);
+        Account toAccount = accountDao.getAccountByUserId(transaction.getToUser());
         if(fromAccount.getUserId() == toAccount.getUserId()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can't send money to yourself");
         }
-        Transaction transaction = new Transaction();
-        transaction.setToUser(toAccount.getUserId());
-        transaction.setFromUser(fromAccount.getUserId());
-        transaction.setAmount(amount);
         transaction.setStatus("Approved");
         Transaction newTransaction = transactionDao.createNewTransaction(transaction);
-        accountDao.transaction(fromAccount, toAccount, amount);
+        accountDao.transaction(fromAccount, toAccount, transaction.getAmount());
         return newTransaction;
     }
 
@@ -81,56 +76,47 @@ public class TransactionController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @RequestMapping(path = "/from_{userName}/{amount}", method = RequestMethod.POST)
-    public Transaction requestTransaction(@PathVariable String userName,
-                                          @PathVariable BigDecimal amount,
+    @RequestMapping(path = "/requestBucks", method = RequestMethod.POST)
+    public Transaction requestTransaction(@RequestBody Transaction transaction,
                                           Principal principal) {
-        Account fromAccount = accountDao.getAccountByUsername(userName);
+        Account fromAccount = accountDao.getAccountByUserId(transaction.getFromUser());
         Account toAccount = accountDao.getAccountByUsername(principal.getName());
-        if(amount.compareTo(new BigDecimal("0.01")) < 0){
+        if(transaction.getAmount().compareTo(new BigDecimal("0.01")) < 0){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a valid amount");
         }
         if(fromAccount.getUserId() == toAccount.getUserId()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can't request money from yourself");
         }
-        Transaction transaction = new Transaction();
-        transaction.setToUser(toAccount.getUserId());
-        transaction.setFromUser(fromAccount.getUserId());
-        transaction.setAmount(amount);
         transaction.setStatus("Pending");
         Transaction newTransaction = transactionDao.createNewTransaction(transaction);
         return newTransaction;
     }
 
-    @RequestMapping(path = "/pendingtransactions", method = RequestMethod.GET)
+    @RequestMapping(path = "/pendingTransactions", method = RequestMethod.GET)
     public List<Transaction> getAllPendingTransactions (Principal principal) {
         List<Transaction> transactions = new ArrayList<>();
         transactions = transactionDao.getAllPendingTransactions(accountDao.getAccountByUsername(principal.getName()).getUserId(), "Pending");
         return transactions;
     }
 
-    @RequestMapping(path = "/{id}/{action}", method = RequestMethod.PUT)
-    public  void updateStatusOfTransaction (@PathVariable int id, @PathVariable String action, Principal principal) {
-        Transaction transaction = transactionDao.getTransactionById(id);
-        //Make sure the transaction's status is pending
-        if(!transaction.getStatus().equals("Pending")){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This transaction is not pending");
-        }
+    @RequestMapping(path = "/updatePendingTransaction", method = RequestMethod.PUT)
+    public  void updateStatusOfTransaction (@RequestBody Transaction transaction, Principal principal) {
+
         //Must make sure principal is the one being requested FROM
         if(transaction.getFromUser() != accountDao.getAccountByUsername(principal.getName()).getUserId()){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "This request is for a different user");
         }
         else {
-            if (action.equals("approve")) {
+            if (transaction.getStatus().equals("Approved")) {
                 Account fromAccount = accountDao.getAccountByUserId(transaction.getFromUser());
                 if(fromAccount.getBalance().compareTo(transaction.getAmount()) < 0) {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not enough money in account");
                 }
                 Account toAccount = accountDao.getAccountByUserId(transaction.getToUser());
                 accountDao.transaction(fromAccount, toAccount, transaction.getAmount());
-                transactionDao.updateStatusOfTransaction(id, "Approved");
-            } else if (action.equals("reject")){
-                transactionDao.updateStatusOfTransaction(id, "Rejected");
+                transactionDao.updateStatusOfTransaction(transaction.getTransactionId(), "Approved");
+            } else if (transaction.getStatus().equals("Rejected")){
+                transactionDao.updateStatusOfTransaction(transaction.getTransactionId(), "Rejected");
             } else{
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Action is not recognized");
             }

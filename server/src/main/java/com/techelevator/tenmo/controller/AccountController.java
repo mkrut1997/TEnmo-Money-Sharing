@@ -10,6 +10,9 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.math.BigDecimal;
+import java.security.Principal;
+
 @PreAuthorize("isAuthenticated()")
 @RestController
 public class AccountController {
@@ -20,13 +23,13 @@ public class AccountController {
         this.accountDao = accountDao;
     }
 
-    @RequestMapping( path = "/accounts/{userName}", method = RequestMethod.GET)
-    public Account getAccountBalance(@PathVariable String userName){
-        Account account = accountDao.getAccountByUsername(userName);
+    @RequestMapping( path = "/account/getBalance", method = RequestMethod.GET)
+    public BigDecimal getAccountBalance(Principal principal){
+        Account account = accountDao.getAccountByUsername(principal.getName());
         if (account == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Account not found");
         } else{
-            return account;
+            return account.getBalance();
         }
     }
 }
