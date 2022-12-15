@@ -81,12 +81,18 @@ public class TransactionController {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @RequestMapping(path = "/from_{userName}/{amount}")
+    @RequestMapping(path = "/from_{userName}/{amount}", method = RequestMethod.POST)
     public Transaction requestTransaction(@PathVariable String userName,
                                           @PathVariable BigDecimal amount,
                                           Principal principal) {
         Account fromAccount = accountDao.getAccountByUsername(userName);
         Account toAccount = accountDao.getAccountByUsername(principal.getName());
+        if(amount.compareTo(new BigDecimal("0.01")) < 0){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Not a valid amount");
+        }
+        if(fromAccount.getUserId() == toAccount.getUserId()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Can't request money from yourself");
+        }
         Transaction transaction = new Transaction();
         transaction.setToUser(toAccount.getUserId());
         transaction.setFromUser(fromAccount.getUserId());
@@ -95,6 +101,19 @@ public class TransactionController {
         Transaction newTransaction = transactionDao.createNewTransaction(transaction);
         return newTransaction;
     }
+
+    @RequestMapping(path = "/pendingtransactions", method = RequestMethod.GET)
+    public List<Transaction> getAllPendingTransactions (Principal principal) {
+        List<Transaction> transactions = new ArrayList<>();
+        transactions = transactionDao.getAllPendingTransactions(accountDao.getAccountByUsername(principal.getName()).getUserId(), "Pending");
+        return transactions;
+    }
+
+    @RequestMapping(path = "/{id}/{action}", method = RequestMethod.PUT)
+    public  void updateStatusOfTransaction (@PathVariable int id, @PathVariable String action, Principal principal) {
+
+    }
+
 }
 
 
