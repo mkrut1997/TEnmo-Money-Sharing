@@ -1,4 +1,4 @@
-package com.techelevator.tenmo;
+package com.techelevator.tenmo.Dto;
 
 /*
     The acronym DTO is being used for "data transfer object". It means that this type of class is specifically

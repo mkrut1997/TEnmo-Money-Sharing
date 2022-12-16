@@ -1,5 +1,7 @@
-package com.techelevator.tenmo;
+package com.techelevator.tenmo.service;
 
+import com.techelevator.tenmo.Dto.CredentialsDto;
+import com.techelevator.tenmo.Dto.TokenDto;
 import org.springframework.http.*;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClientResponseException;
